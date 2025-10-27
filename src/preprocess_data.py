@@ -14,12 +14,13 @@
 #    California, Texas, Florida, Washington, and New York and with a 
 #    previous sale date in 2022.
 # 6. Imputation for missing lot size based on median lot size.
-# 7. Imputation for missing house size based on median house size.
+# 7. Imputation for missing house size based on median house size
+#    Imputation for missing bed/bath counts based on median bed/bath counts.
 # 8. Imputation for missing prices based on bed/bath count.
 # 9. Scaling and encoding using RobustScaler and OneHotEncoder and included
 #    the original, unscaled numeric columns for reference/visualization later.
 # 10. A random 80/20 split for training and testing.
-# 10. Save the final, model-ready datasets to new CSV files.
+# 11. Save the final, model-ready datasets to new CSV files.
 ############################################################
 
 import os
@@ -176,12 +177,22 @@ def main():
         df_housing.drop(columns=['median_price_impute'], inplace=True)
         print("Imputation complete.")
         
-    # Impute missing house sizes and lot sizes
+    # Impute missing lot sizes
     median_lot_size = df_housing[COL_ACRE_LOT].median()
     df_housing[COL_ACRE_LOT].fillna(median_lot_size, inplace=True)
     
+    # Impute missing house sizes
     median_house_size = df_housing[COL_HOUSE_SIZE].median()
     df_housing[COL_HOUSE_SIZE].fillna(median_house_size, inplace=True)
+    
+    # Impute missing bed counts
+    median_bed = df_housing[COL_BED].median()
+    df_housing[COL_BED].fillna(median_bed, inplace=True)
+    
+    # Impute missing bath counts
+    median_bath = df_housing[COL_BATH].median()
+    df_housing[COL_BATH].fillna(median_bath, inplace=True)
+
     print(f"Data cleaned. {len(df_housing)} records remaining.")
 
     train_df, test_df = train_test_split(df_housing, test_size=0.2, random_state=42)
