@@ -73,7 +73,7 @@ DISTANCE_THRESHOLD_MILES = 25
 # IQR Multiplier for outlier detection
 IQR_MULTIPLIER = 1.5
 # Zip code population density threshold
-DENSITY_THRESHOLD = 5000
+DENSITY_THRESHOLD = 2000
 
 def main():
     """Main function to execute the preprocessing workflow."""
@@ -386,4 +386,8 @@ def main():
     print("-" * 50)
     print("Preprocessing complete!")
     print(f"Processed training data saved to: {train_output_path}")
+    print("-" * 50)
     print(f"Processed test data saved to: {test_output_path}")
+    
+if __name__ == "__main__":
+    main()
