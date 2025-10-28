@@ -8,8 +8,12 @@ import numpy as np
 BASE = Path(__file__).resolve().parents[1]
 USZIPS = BASE / "data" / "simplemaps_uszips_basicv1.911" / "uszips.csv"
 ZCTA_ZIP = BASE / "data" / "geo_data" / "tl_2021_us_zcta520.zip"
-OUT_DIR = BASE / "data" / "processed_data"
 MODEL_RESULTS = BASE / "data" / "output_data" / "test_data_with_predictions.csv"
+ZCTA_PARQUET_IN = BASE / "data" / "processed_data" / "tx_zcta.parquet"
+ZCTA_PARQUET_OUT = BASE / "data" / "processed_data" / "tx_zcta_with_prices.parquet"
+ZCTA_CSV_OUT = BASE / "data" / "processed_data" / "tx_zcta_with_prices.csv"
+OUT_DIR = BASE / "data" / "processed_data"
+
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Load attributes and keep TX only
@@ -42,63 +46,9 @@ print("Wrote:", gpq_path)
 print("Wrote:", geojson_path)
 
 # ----- ADD ZIP TO PREDICTED DATASET -----
-
 from sklearn.neighbors import BallTree
-#
-# # TX ZIP centroids (radians)
-# zips_tx = pl.read_csv(USZIPS).filter(pl.col("state_id") == "TX")
-# zip_coords = np.deg2rad(np.c_[zips_tx["lat"].to_numpy(), zips_tx["lng"].to_numpy()])
-# tree = BallTree(zip_coords, metric="haversine")
-#
-# # house coords (radians)
-# houses = pl.read_csv(MODEL_RESULTS)
-# house_coords = np.deg2rad(np.c_[houses["latitude_original"].to_numpy(),
-#                                 houses["longitude_original"].to_numpy()])
-#
-# # query nearest centroid (returns index in zips_tx)
-# dist_rad, idx = tree.query(house_coords, k=1)
-# nearest_zip = zips_tx["zip"].to_numpy()[idx.ravel()]
-#
-# # attach ZIP (distance in km if you want it)
-# houses = houses.with_columns([
-#     pl.Series("zip", nearest_zip),
-#     pl.Series("zip_dist_km", (dist_rad.ravel() * 6371.0))
-# ])
-#
-# zip_agg = (
-#     houses.group_by("zip")
-#           .agg([
-#               pl.col("predicted_price").median().alias("pred_price_median"),
-#               pl.col("predicted_price").mean().alias("pred_price_mean"),
-#               pl.col("predicted_price").max().alias("pred_price_max")
-#           ])
-# )
-#
-# # zcta_tx is a GeoDataFrame; ensure 'zip' is str/zero-padded
-# # zcta_tx["zip"] = zcta_tx["zip"].astype(str).str.zfill(5)
-# # --- 2) Zero-pad/normalize 'zip' in BOTH tables (Polars)
-# zcta_tx = zcta_tx.with_columns(
-#     pl.col("zip").cast(pl.Utf8).str.zfill(5)
-# )
-# zip_agg = zip_agg.with_columns(
-#     pl.col("zip").cast(pl.Utf8).str.zfill(5)
-# )
-#
-# # join metrics onto polygons for plotting
-# # plot_df = zcta_tx.merge(zip_agg, on="zip", how="left")
-# joined_df = zcta_tx.join(zip_agg, on="zip", how="left")
-#
-# result_path = OUT_DIR / "plot_data_processed.csv"
-# plot_df.write_csv(result_path)
 
-BASE = Path(__file__).resolve().parents[1]
-USZIPS = BASE / "data" / "simplemaps_uszips_basicv1.911" / "uszips.csv"
-MODEL_RESULTS = BASE / "data" / "output_data" / "test_data_with_predictions.csv"
-ZCTA_PARQUET_IN = BASE / "data" / "processed_data" / "tx_zcta.parquet"   # your existing TX-only ZCTA GeoParquet
-ZCTA_PARQUET_OUT = BASE / "data" / "processed_data" / "tx_zcta_with_prices.parquet"
-ZCTA_CSV_OUT = BASE / "data" / "processed_data" / "tx_zcta_with_prices.csv"
-
-# --- 1) Nearest-ZIP assignment (BallTree) ---
+# Find Nearest-ZIP assignment using BallTree
 zips_tx = (
     pl.read_csv(USZIPS, dtypes={"zip": pl.Utf8})
       .filter(pl.col("state_id") == "TX")
@@ -120,7 +70,7 @@ houses = houses.with_columns([
     pl.Series("zip_dist_km", (dist_rad.ravel() * 6371.0))
 ])
 
-# --- 2) ZIP-level aggregates in Polars ---
+# ZIP-level aggregates in Polars for performance
 zip_agg = (
     houses.group_by("zip")
           .agg([
@@ -131,11 +81,10 @@ zip_agg = (
           .with_columns(pl.col("zip").cast(pl.Utf8).str.zfill(5))
 )
 
-# --- 3) Load TX ZCTA polygons (GeoParquet) ---
+# Load TX ZCTA polygons (GeoParquet)
 zcta_tx = gpd.read_parquet(ZCTA_PARQUET_IN)          # GeoDataFrame (WGS84), has 'zip' + geometry
 zcta_tx["zip"] = zcta_tx["zip"].astype(str).str.zfill(5)
 
-# --- 4) Join attributes in Polars, then reattach geometry ---
 attr_cols = [c for c in zcta_tx.columns if c != "geometry"]
 zcta_attrs_pl = pl.from_pandas(zcta_tx[attr_cols]).with_columns(pl.col("zip").cast(pl.Utf8).str.zfill(5))
 
@@ -144,10 +93,7 @@ joined_pd = joined_pl.to_pandas()
 
 plot_gdf = zcta_tx[["zip", "geometry"]].merge(joined_pd, on="zip", how="left")
 
-print(plot_gdf.head())
-exit()
-
-# --- 5) Save as GeoParquet (preserves geometry + metadata) ---
+# Save as GeoParquet (preserves geometry + metadata)
 plot_gdf.to_parquet(ZCTA_PARQUET_OUT)
 plot_gdf.to_csv(ZCTA_CSV_OUT)
-print(f"✅ Wrote {ZCTA_PARQUET_OUT}")
+print(f"Wrote {ZCTA_PARQUET_OUT}")
