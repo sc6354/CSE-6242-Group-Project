@@ -52,6 +52,8 @@ COL_ACRE_LOT = "acre_lot"
 COL_CITY = "city"
 COL_STATE = "state"
 COL_ZIP = "zip_code"
+COL_ORIGINAL_ZIP = "original_zip_code" # original zip
+COL_DENSITY = "density" # Density column name
 COL_HOUSE_SIZE = "house_size"
 COL_SOLD_DATE = "prev_sold_date"
 # COL_IS_NEAR_TJ = "is_near_trader_joes" # Replaced by distance bins
@@ -75,7 +77,7 @@ YEAR_TO_KEEP = 2022
 # IQR Multiplier for outlier detection
 IQR_MULTIPLIER = 1.5
 # Zip code population density threshold
-DENSITY_THRESHOLD = 2000 
+# DENSITY_THRESHOLD = 2000 
 
 def main():
     """Main function to execute the preprocessing workflow."""
@@ -93,19 +95,21 @@ def main():
     print(f"Loaded {len(df_zip_coords_raw)} zip code records.")
 
     # --- 2. Preprocess Coordinates Data ---
-    print(f"Preprocessing zip code data and filtering for density > {DENSITY_THRESHOLD}...")
+    print(f"Preprocessing zip code data...")
     df_zip_coords = df_zip_coords_raw.copy()
     df_zip_coords['zip'] = df_zip_coords['zip'].astype(str).str.zfill(5)
-    df_zip_coords = df_zip_coords[['zip', 'lat', 'lng', 'density']].copy()
-    df_zip_coords.dropna(subset=['lat', 'lng', 'density'], inplace=True)
+    # Keep density column
+    df_zip_coords = df_zip_coords[['zip', 'lat', 'lng', COL_DENSITY]].copy()
+    df_zip_coords.dropna(subset=['lat', 'lng', COL_DENSITY], inplace=True)
     initial_zip_count = len(df_zip_coords)
-    df_zip_coords = df_zip_coords[df_zip_coords['density'] > DENSITY_THRESHOLD].copy()
+    # df_zip_coords = df_zip_coords[df_zip_coords[COL_DENSITY] > DENSITY_THRESHOLD].copy()
     print(f"Filtered zip codes by density. {len(df_zip_coords)} of {initial_zip_count} zip codes remaining.")
 
     # --- 3. Preprocess Trader Joe's Locations ---
     print("Preprocessing Trader Joe's locations...")
     df_tj_zips_raw['zip'] = df_tj_zips_raw['zip'].astype(str).str.extract(r'(\d{5})', expand=False)
     df_tj_zips_raw.dropna(subset=['zip'], inplace=True)
+    # Merge uses filtered coords but only needs lat/lng/zip for TJs ---
     df_tj_locations = pd.merge(df_tj_zips_raw, df_zip_coords[['zip', 'lat', 'lng']], on='zip', how='left')
     df_tj_locations.dropna(subset=['lat', 'lng'], inplace=True)
     tj_coords = df_tj_locations[['lat', 'lng']].values
@@ -126,13 +130,21 @@ def main():
     df_housing = df_housing[df_housing[COL_STATE].isin(STATES_TO_KEEP)].copy()
     print(f"Filtered for states. {len(df_housing)} records remaining.")
 
+    # Standardize and RENAME original zip_code ---
     df_housing[COL_ZIP] = df_housing[COL_ZIP].astype(str).str.extract(r'(\d{5})', expand=False)
-    df_housing = pd.merge(df_housing, df_zip_coords[['zip', 'lat', 'lng']], left_on=COL_ZIP, right_on='zip', how='left')
-    df_housing.rename(columns={'lat': COL_LAT, 'lng': COL_LON}, inplace=True)
-    df_housing.dropna(subset=[COL_LAT, COL_LON], inplace=True)
-    print(f"Applied zip code density filter to housing data via merge. {len(df_housing)} records remaining.")
-    print("Added house coordinates.")
+    df_housing.rename(columns={COL_ZIP: COL_ORIGINAL_ZIP}, inplace=True)
 
+    # Merge with density-filtered zip data including density ---
+    # Merge using the renamed original zip code
+    df_housing = pd.merge(df_housing, df_zip_coords[['zip', 'lat', 'lng', COL_DENSITY]], left_on=COL_ORIGINAL_ZIP, right_on='zip', how='left')
+    df_housing.rename(columns={'lat': COL_LAT, 'lng': COL_LON}, inplace=True)
+    df_housing.drop(columns=['zip'], inplace=True) # Drop the 'zip' column from df_zip_coords
+
+    df_housing.dropna(subset=[COL_LAT, COL_LON], inplace=True) # Also removes rows where merge failed
+    print(f"Applied zip code density filter to housing data via merge. {len(df_housing)} records remaining.")
+    print("Added house coordinates and density.")
+
+    # Calculate distance
     if tree is not None:
         print("Calculating distance to nearest Trader Joe's for each house...")
         house_coords_rad = np.radians(df_housing[[COL_LAT, COL_LON]].values)
@@ -144,28 +156,21 @@ def main():
         earth_radius_miles = 3958.8
         df_housing[COL_MIN_DIST_TJ] = distances_rad * earth_radius_miles
         print("Distance calculation complete.")
-        # Replaced binary flag with bins later
-        # df_housing[COL_IS_NEAR_TJ] = (df_housing[COL_MIN_DIST_TJ] <= DISTANCE_THRESHOLD_MILES).astype(int)
-        # print(f"Identified {df_housing[COL_IS_NEAR_TJ].sum()} properties within {DISTANCE_THRESHOLD_MILES} miles of a Trader Joe's.")
     else:
         print("Skipping distance calculation as no TJ locations were found.")
-        df_housing[COL_NEAREST_TJ_LAT] = 0 # Impute with 0 later
-        df_housing[COL_NEAREST_TJ_LON] = 0 # Impute with 0 later
-        df_housing[COL_MIN_DIST_TJ] = np.inf # Impute with median later
-        # df_housing[COL_IS_NEAR_TJ] = 0
+        df_housing[COL_NEAREST_TJ_LAT] = 0
+        df_housing[COL_NEAREST_TJ_LON] = 0
+        df_housing[COL_MIN_DIST_TJ] = np.inf
 
     # --- 5. Further Feature Engineering & Filtering ---
     df_housing[COL_PREV_SOLD] = df_housing[COL_SOLD_DATE].notnull().astype(int)
-
     if df_housing[COL_PRICE].dtype == 'object':
         df_housing[COL_PRICE] = df_housing[COL_PRICE].str.replace(r'[$,]', '', regex=True).astype(float)
-
     df_housing[COL_SOLD_DATE] = pd.to_datetime(df_housing[COL_SOLD_DATE], errors='coerce')
     df_housing[COL_PREV_SOLD_YEAR] = df_housing[COL_SOLD_DATE].dt.year
     df_housing[COL_PREV_SOLD_YEAR] = df_housing[COL_PREV_SOLD_YEAR].fillna(0).astype(int)
     df_housing['month_sold'] = df_housing[COL_SOLD_DATE].dt.month
     df_housing['month_sold'] = df_housing['month_sold'].fillna(0).astype(int)
-
     year_filter_count = len(df_housing)
     df_housing = df_housing[(df_housing[COL_PREV_SOLD_YEAR] == YEAR_TO_KEEP)].copy()
     if df_housing.empty:
@@ -173,18 +178,14 @@ def main():
         return
     print(f"Filtered for year {YEAR_TO_KEEP}. {len(df_housing)} of {year_filter_count} records remaining.")
 
-    # Add Distance Bins and Directional Features ---
     print("Creating distance bins...")
-    distance_bins = [-1, 5, 15, 25, np.inf] # Bins: 0-5, 5-15, 15-25, >25 miles
+    distance_bins = [-1, 5, 15, 25, np.inf]
     distance_labels = ['0-5 miles', '5-15 miles', '15-25 miles', '>25 miles']
-    # Use fillna for cases where distance might be NaN/inf before binning
     df_housing[COL_TJ_DIST_BIN] = pd.cut(df_housing[COL_MIN_DIST_TJ].fillna(np.inf), bins=distance_bins, labels=distance_labels, right=True)
-    # Convert bin to string and fill potential NaNs from cut if needed
     df_housing[COL_TJ_DIST_BIN] = df_housing[COL_TJ_DIST_BIN].astype(str).fillna('>25 miles')
     print("Distance bins created.")
 
     print("Calculating directional features relative to nearest TJ...")
-    # Fill NaN coordinates before subtraction to avoid errors/NaN propagation
     df_housing[COL_LAT_DIFF_TJ] = df_housing[COL_LAT].fillna(0) - df_housing[COL_NEAREST_TJ_LAT].fillna(0)
     df_housing[COL_LON_DIFF_TJ] = df_housing[COL_LON].fillna(0) - df_housing[COL_NEAREST_TJ_LON].fillna(0)
     print("Directional features calculated.")
@@ -224,19 +225,16 @@ def main():
     median_bath = df_housing[COL_BATH].median()
     df_housing[COL_BATH].fillna(median_bath, inplace=True)
 
-    # Impute distance/coordinate features if they became NaN/Inf
     if COL_MIN_DIST_TJ in df_housing.columns and not np.all(np.isfinite(df_housing[COL_MIN_DIST_TJ])):
          print(f"Imputing non-finite values in {COL_MIN_DIST_TJ}...")
          dist_median = df_housing.loc[np.isfinite(df_housing[COL_MIN_DIST_TJ]), COL_MIN_DIST_TJ].median()
          df_housing[COL_MIN_DIST_TJ].replace([np.inf, -np.inf], np.nan, inplace=True)
          df_housing[COL_MIN_DIST_TJ].fillna(dist_median, inplace=True)
 
-    # Impute potentially missing nearest TJ coordinates with 0 (or median if preferred)
     df_housing[COL_NEAREST_TJ_LAT].fillna(0, inplace=True)
     df_housing[COL_NEAREST_TJ_LON].fillna(0, inplace=True)
-    df_housing[COL_LAT_DIFF_TJ].fillna(0, inplace=True) # Already handled earlier, but as fallback
-    df_housing[COL_LON_DIFF_TJ].fillna(0, inplace=True) # Already handled earlier, but as fallback
-
+    df_housing[COL_LAT_DIFF_TJ].fillna(0, inplace=True)
+    df_housing[COL_LON_DIFF_TJ].fillna(0, inplace=True)
 
     print(f"Data cleaned. {len(df_housing)} records remaining.")
 
@@ -244,18 +242,18 @@ def main():
     print(f"Split data randomly: {len(train_df)} training, {len(test_df)} test records.")
 
     # --- 7. Preprocessing Pipeline ---
-    # Pipeline for scaling and encoding categorical features
+    # Define features for the pipeline (Density and original zip are NOT scaled/encoded and not used for training)
     numerical_predictors = [
         COL_BED, COL_BATH, COL_ACRE_LOT, COL_HOUSE_SIZE,
         COL_LAT, COL_LON, COL_MIN_DIST_TJ,
         COL_NEAREST_TJ_LAT, COL_NEAREST_TJ_LON,
-        COL_LAT_DIFF_TJ, COL_LON_DIFF_TJ # Added directional features
+        COL_LAT_DIFF_TJ, COL_LON_DIFF_TJ
     ]
     categorical_predictors = [
         COL_STATE,
-        COL_TJ_DIST_BIN # Added distance bins
+        COL_TJ_DIST_BIN
     ]
-    passthrough_predictors = ['month_sold'] # Removed IS_NEAR_TJ
+    passthrough_predictors = ['month_sold']
 
     robust_scaler_pipeline = Pipeline(steps=[
         ("scaler", RobustScaler())
@@ -274,21 +272,18 @@ def main():
     )
 
     print("Fitting the transformer on the training data...")
-    all_predictor_columns = numerical_predictors + categorical_predictors + passthrough_predictors
+    all_pipeline_columns = numerical_predictors + categorical_predictors + passthrough_predictors
 
-    # Ensure all columns exist before fitting
-    missing_cols_fit = [col for col in all_predictor_columns if col not in train_df.columns]
+    missing_cols_fit = [col for col in all_pipeline_columns if col not in train_df.columns]
     if missing_cols_fit:
         print(f"Error: Required columns missing for fitting transformer: {missing_cols_fit}")
-        # Add imputation logic here if feasible or return
         return
 
-    # Check for NaNs *within* the selected columns before fitting
-    cols_to_check = train_df[all_predictor_columns]
+    cols_to_check = train_df[all_pipeline_columns]
     if cols_to_check.isnull().any().any():
          print("Error: NaN values detected in columns used for fitting the transformer:")
          print(cols_to_check.isnull().sum()[cols_to_check.isnull().sum() > 0])
-         # Add more robust imputation here if necessary, or return
+         # Attempt imputation...
          print("Attempting final median/mode imputation before fitting...")
          for col in cols_to_check.columns[cols_to_check.isnull().any()]:
              if pd.api.types.is_numeric_dtype(train_df[col]):
@@ -296,13 +291,12 @@ def main():
                  train_df[col].fillna(median_val, inplace=True)
                  if col in test_df.columns: test_df[col].fillna(median_val, inplace=True)
                  print(f"Imputed NaNs in numeric '{col}' with median {median_val}.")
-             else: # Assume categorical
-                 mode_val = train_df[col].mode()[0] # Get the first mode if multiple exist
+             else:
+                 mode_val = train_df[col].mode()[0]
                  train_df[col].fillna(mode_val, inplace=True)
                  if col in test_df.columns: test_df[col].fillna(mode_val, inplace=True)
                  print(f"Imputed NaNs in categorical '{col}' with mode '{mode_val}'.")
-
-         cols_to_check = train_df[all_predictor_columns] # Re-check
+         cols_to_check = train_df[all_pipeline_columns] # Re-check
          if cols_to_check.isnull().any().any():
               print("Error: NaN values still present after imputation attempt. Aborting.")
               print(cols_to_check.isnull().sum()[cols_to_check.isnull().sum() > 0])
@@ -310,54 +304,57 @@ def main():
          else:
               print("Final imputation successful.")
 
-    transformer.fit(train_df[all_predictor_columns])
+    transformer.fit(train_df[all_pipeline_columns])
     feature_names = transformer.get_feature_names_out()
 
     # --- 8. Transform Data and Save ---
     print("Transforming training data...")
-    # Ensure columns exist and no NaNs before transforming
-    missing_cols_train = [col for col in all_predictor_columns if col not in train_df.columns]
+    missing_cols_train = [col for col in all_pipeline_columns if col not in train_df.columns]
     if missing_cols_train:
          print(f"Error: Columns missing from training data before transform: {missing_cols_train}")
          return
-    if train_df[all_predictor_columns].isnull().any().any():
+    if train_df[all_pipeline_columns].isnull().any().any():
          print("Error: NaN values detected in training data columns before transform.")
-         print(train_df[all_predictor_columns].isnull().sum()[train_df[all_predictor_columns].isnull().sum() > 0])
+         print(train_df[all_pipeline_columns].isnull().sum()[train_df[all_pipeline_columns].isnull().sum() > 0])
          return
 
-    train_transformed_data = transformer.transform(train_df[all_predictor_columns])
+    train_transformed_data = transformer.transform(train_df[all_pipeline_columns])
     train_df_processed = pd.DataFrame(train_transformed_data, columns=feature_names, index=train_df.index)
     train_df_processed[COL_PRICE] = train_df[COL_PRICE]
 
     print("Adding original, unscaled numeric columns back to training data...")
-    # Ensure columns exist before adding suffix
     original_train_cols_to_add = [col for col in numerical_predictors if col in train_df.columns]
     original_train_cols = train_df[original_train_cols_to_add].add_suffix('_original')
     train_df_processed = train_df_processed.join(original_train_cols)
 
+    # Add back original zip code and density ---
+    print(f"Adding '{COL_ORIGINAL_ZIP}' and '{COL_DENSITY}' columns back to training data...")
+    train_df_processed = train_df_processed.join(train_df[[COL_ORIGINAL_ZIP, COL_DENSITY]])
+
     print("Transforming test data...")
-    missing_cols_test = [col for col in all_predictor_columns if col not in test_df.columns]
+    missing_cols_test = [col for col in all_pipeline_columns if col not in test_df.columns]
     if missing_cols_test:
          print(f"Error: Columns missing from test data before transform: {missing_cols_test}")
          return
-    if test_df[all_predictor_columns].isnull().any().any():
+    if test_df[all_pipeline_columns].isnull().any().any():
          print("Error: NaN values detected in test data columns before transform.")
-         print(test_df[all_predictor_columns].isnull().sum()[test_df[all_predictor_columns].isnull().sum() > 0])
+         print(test_df[all_pipeline_columns].isnull().sum()[test_df[all_pipeline_columns].isnull().sum() > 0])
          return
 
-    test_transformed_data = transformer.transform(test_df[all_predictor_columns])
+    test_transformed_data = transformer.transform(test_df[all_pipeline_columns])
     test_df_processed = pd.DataFrame(test_transformed_data, columns=feature_names, index=test_df.index)
     test_df_processed[COL_PRICE] = test_df[COL_PRICE]
 
     print("Adding original, unscaled numeric columns back to test data...")
-    # Ensure columns exist before adding suffix
     original_test_cols_to_add = [col for col in numerical_predictors if col in test_df.columns]
     original_test_cols = test_df[original_test_cols_to_add].add_suffix('_original')
     test_df_processed = test_df_processed.join(original_test_cols)
 
-    if not os.path.exists(OUTPUT_DIR):
-        os.makedirs(OUTPUT_DIR)
+    # Add back original zip code and density ---
+    print(f"Adding '{COL_ORIGINAL_ZIP}' and '{COL_DENSITY}' columns back to test data...")
+    test_df_processed = test_df_processed.join(test_df[[COL_ORIGINAL_ZIP, COL_DENSITY]])
 
+    # Save processed data
     train_output_path = os.path.join(OUTPUT_DIR, "training_processed.csv")
     test_output_path = os.path.join(OUTPUT_DIR, "test_processed.csv")
 
@@ -366,8 +363,8 @@ def main():
 
     print("-" * 50)
     print("Preprocessing complete!")
-    print(f"Processed training data saved to: {train_output_path}")
-    print(f"Processed test data saved to: {test_output_path}")
+    print(f"Processed training data saved to: {train_output_path} (Includes '{COL_ORIGINAL_ZIP}' and '{COL_DENSITY}')")
+    print(f"Processed test data saved to: {test_output_path} (Includes '{COL_ORIGINAL_ZIP}' and '{COL_DENSITY}')")
     print("-" * 50)
 
 if __name__ == "__main__":
