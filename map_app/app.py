@@ -84,6 +84,89 @@ color_col = st.selectbox(
 visible = zcta_tx[~zcta_tx[color_col].isna()]
 geojson = json.loads(visible.to_json())
 
+# ==============================================================================
+# STATE OVERVIEW OVERLAY CARD
+# ==============================================================================
+
+# 1. CALCULATE SUMMARY METRICS
+state_name = "Texas"
+total_tjs = len(tjs_tx)
+# Only consider visible ZIPs for summary stats consistency
+avg_pop_density = visible["density"].mean()
+# Use the overall median predicted price for the state summary
+median_pred_price = visible["pred_price_median"].median()
+
+# Format the metrics
+total_tjs_str = f"{total_tjs:,}"
+# Round density to the nearest whole number
+avg_pop_density_str = f"{avg_pop_density:,.0f}"
+# Round price to the nearest whole dollar
+median_pred_price_str = f"${median_pred_price:,.0f}"
+
+# 2. RENDER OVERLAY CARD
+st.markdown("""
+<style>
+.fixed-card {
+    position: absolute;
+    top: 220px; /* Adjust this value to position vertically below the title/selectbox */
+    left: 17px; /* Adjust this value to position horizontally */
+    z-index: 1000;
+    width: 30%;
+    max-width: 300px;
+    min-width: 200px;
+    padding: 15px;
+    background-color: rgba(255, 255, 255, 0.7); /* 70% opacity white */
+    backdrop-filter: blur(5px);
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    font-family: 'Inter', sans-serif;
+}
+.card-metric {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+.card-metric:last-child {
+    border-bottom: none;
+}
+.metric-label {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #4B4B4B;
+}
+.metric-value {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #000000;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# Create the content of the overlay card using the injected CSS classes
+overlay_card_html = f"""
+<div class="fixed-card">
+    <h4 style="margin: 0 0 10px 0;">State Overview: {state_name}</h4>
+    <div class="card-metric">
+        <span class="metric-label">Number of Trader Joe's Locations:</span>
+        <span class="metric-value">{total_tjs_str}</span>
+    </div>
+    <div class="card-metric">
+        <span class="metric-label">Average Population Density:</span>
+        <span class="metric-value">{avg_pop_density_str} ppl/mi²</span>
+    </div>
+    <div class="card-metric">
+        <span class="metric-label">Median Predicted Housing Price:</span>
+        <span class="metric-value">{median_pred_price_str}</span>
+    </div>
+</div>
+"""
+st.markdown(overlay_card_html, unsafe_allow_html=True)
+# ==============================================================================
+# END STATE OVERVIEW OVERLAY CARD
+# ==============================================================================
+
+
 # --- Create Plotly figure with polygons ---
 fig = px.choropleth_mapbox(
     visible,
@@ -106,6 +189,34 @@ fig = px.choropleth_mapbox(
     center={"lat": 31.0, "lon": -99.0},  # center of Texas-ish
     zoom=4.5,
     opacity=0.6
+)
+
+# State boundary overlay
+tx_boundary = gpd.GeoDataFrame(
+    {'state': ['TX']},   # make this variable for other states ... ask Hannah
+    geometry=[zcta_tx.geometry.unary_union],
+    crs=zcta_tx.crs
+)
+
+# Convert the single boundary polygon to GeoJSON for Plotly
+tx_geojson = json.loads(tx_boundary.to_json())
+
+# Add a Choroplethmapbox layer specifically for the boundary.
+fig.add_trace(
+    go.Choroplethmapbox(
+        geojson=tx_geojson,
+        locations=tx_boundary['state'],
+        featureidkey="properties.state",
+        z=[1],  # Dummy data value required by Plotly
+        # Define a colorscale that is completely transparent for the fill
+        colorscale=[[0, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,0)']],
+        showscale=False,
+        marker_opacity=1,
+        marker_line_width=1,  # Thicker line for a prominent outline
+        marker_line_color='black',
+        name='State Boundary',
+        hoverinfo='skip'  # Skip hover info so it doesn't interfere with ZIP codes
+    )
 )
 
 # --- Add Trader Joe's point layer ---
