@@ -8,7 +8,13 @@ from pathlib import Path
 
 st.set_page_config(page_title="Texas ZIPs + Trader Joe's", layout="wide")
 st.title("Texas ZIP Code Boundaries with Trader Joe’s Locations")
+st.markdown(
+    """
+    **Our project aims to predict housing prices by analyzing real estate data with a focus on proximity to Trader Joe’s stores.**
+    """
+)
 
+# --- File paths ---
 BASE = Path(__file__).resolve().parents[1]
 TJ_PATH = BASE / "data" / "raw" / "tj-locations.csv"   # adjust if needed
 GEOJSON_PATH = BASE / "data" / "processed_data" / "tx_zcta.geojson"  # or use Parquet below
@@ -244,5 +250,5 @@ st.plotly_chart(fig, use_container_width=True)
 
 st.caption(
     "ZIP boundaries from Census ZCTA polygons; attributes from SimpleMaps uszips; "
-    "Trader Joe’s locations overlaid as points."
+    "Trader Joe’s locations overlaid as points TESTTEST"
 )

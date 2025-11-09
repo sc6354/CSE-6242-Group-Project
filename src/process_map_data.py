@@ -1,4 +1,3 @@
-
 from pathlib import Path
 import json
 import pandas as pd
@@ -19,7 +18,7 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Load attributes and keep TX only
 uszips = pd.read_csv(USZIPS, dtype={"zip": "string"}).assign(zip=lambda d: d["zip"].str.zfill(5))
-uszips_tx = uszips[uszips["state_id"] == "TX"]
+#uszips_tx = uszips[uszips["state_id"] == "TX"]
 
 # Load polygons
 zcta = gpd.read_file(f"zip://{ZCTA_ZIP}")
@@ -33,8 +32,8 @@ else:
 zcta = zcta.to_crs(epsg=4326)
 
 # Join to keep only TX ZCTAs and carry a few attributes
-keep_cols = ["zip", "population", "density", "city", "county_name"]
-zcta_tx = zcta.merge(uszips_tx[keep_cols], on="zip", how="inner")[["zip", "population", "density", "city", "county_name", "geometry"]]
+keep_cols = ["zip", "population", "density", "city", "county_name","state_id"]
+zcta_tx = zcta.merge(uszips[keep_cols], on="zip", how="inner")[["zip", "population", "density", "city", "county_name", "state_id", "geometry"]]
 
 # Save as GeoParquet (fastest to reload) and GeoJSON
 gpq_path = OUT_DIR / "tx_zcta.parquet"
@@ -52,7 +51,7 @@ from sklearn.neighbors import BallTree
 # Find Nearest-ZIP assignment using BallTree
 zips_tx = (
     pl.read_csv(USZIPS, dtypes={"zip": pl.Utf8})
-      .filter(pl.col("state_id") == "TX")
+     # .filter(pl.col("state_id") == "TX")
       .with_columns(pl.col("zip").str.zfill(5))
 )
 

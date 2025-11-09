@@ -29,6 +29,7 @@ import os
 import pandas as pd
 import numpy as np
 from scipy.spatial import cKDTree
+from pathlib import Path
 
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
@@ -38,12 +39,13 @@ from sklearn.model_selection import train_test_split
 # --- Configuration ---
 
 # Data files
-HOUSING_DATA_FILE = "data/raw/realtor-data.zip.csv"
-TRADER_JOES_ZIPS_FILE = "data/raw/tj-locations.csv"
-ZIP_COORDS_FILE = "data/simplemaps_uszips_basicv1.911/uszips.csv"
+
+HOUSING_DATA_FILE = "/data/raw/realtor-data.zip.csv"
+TRADER_JOES_ZIPS_FILE = "/data/raw/tj-locations.csv"
+ZIP_COORDS_FILE = "/data/simplemaps_uszips_basicv1.911/uszips.csv"
 
 # Output directory
-OUTPUT_DIR = "data/processed_data"
+OUTPUT_DIR = "/data/processed_data"
 
 # Define column names
 COL_PRICE = "price"
@@ -73,7 +75,7 @@ DISTANCE_THRESHOLD_MILES = 25
 # IQR Multiplier for outlier detection
 IQR_MULTIPLIER = 1.5
 # Zip code population density threshold
-DENSITY_THRESHOLD = 2000
+#DENSITY_THRESHOLD = 2000
 
 def main():
     """Main function to execute the preprocessing workflow."""
@@ -92,7 +94,7 @@ def main():
     print(f"Loaded {len(df_zip_coords_raw)} zip code records.")
 
     # --- 2. Preprocess Coordinates Data ---
-    print(f"Preprocessing zip code data and filtering for density > {DENSITY_THRESHOLD}...")
+    #print(f"Preprocessing zip code data and filtering for density > {DENSITY_THRESHOLD}...")
     df_zip_coords = df_zip_coords_raw.copy()
     df_zip_coords['zip'] = df_zip_coords['zip'].astype(str).str.zfill(5)
     # Keep density column for filtering
@@ -101,7 +103,7 @@ def main():
 
     # Apply density filter
     initial_zip_count = len(df_zip_coords)
-    df_zip_coords = df_zip_coords[df_zip_coords['density'] > DENSITY_THRESHOLD].copy()
+    #df_zip_coords = df_zip_coords[df_zip_coords['density'] > DENSITY_THRESHOLD].copy()
     print(f"Filtered zip codes by density. {len(df_zip_coords)} of {initial_zip_count} zip codes remaining.")
 
     # --- 3. Preprocess Trader Joe's Locations ---
