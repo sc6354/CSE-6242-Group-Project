@@ -167,6 +167,11 @@ st.markdown("""
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
     font-family: 'Inter', sans-serif;
 }
+/* Force dark text for title + description, even in dark theme */
+.fixed-card h4,
+.fixed-card p {
+    color: #000000;
+}
 .card-metric {
     display: flex;
     justify-content: space-between;
@@ -225,6 +230,10 @@ st.markdown(overlay_card_html, unsafe_allow_html=True)
 # -----------------------------------------------------------------------------
 map_cfg = STATE_MAP_CONFIG[selected_state_code]
 
+# Compute global range across all states once per app run
+global_min = zcta_all[color_col].min()
+global_max = zcta_all[color_col].max()
+
 fig = px.choropleth_mapbox(
     visible,
     geojson=geojson,
@@ -245,7 +254,9 @@ fig = px.choropleth_mapbox(
     mapbox_style="carto-positron",
     center={"lat": map_cfg["lat"], "lon": map_cfg["lon"]},
     zoom=map_cfg["zoom"],
-    opacity=0.6
+    opacity=0.6,
+    color_continuous_scale="Blues",  # dark blue = high, light blue = low
+    range_color=(global_min, global_max),  # same range for all states
 )
 
 # State boundary from that state's ZCTAs
@@ -288,7 +299,7 @@ fig.add_trace(
         customdata=tjs_state[["name", "street", "city", "state", "zip"]].values
     )
 )
-
+fig.update_layout(coloraxis_reversescale=False)
 fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 
 st.plotly_chart(fig, use_container_width=True)

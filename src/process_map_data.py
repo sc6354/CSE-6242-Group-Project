@@ -9,16 +9,16 @@ BASE = Path(__file__).resolve().parents[1]
 USZIPS = BASE / "data" / "simplemaps_uszips_basicv1.911" / "uszips.csv"
 ZCTA_ZIP = BASE / "data" / "geo_data" / "tl_2021_us_zcta520.zip"
 MODEL_RESULTS = BASE / "data" / "output_data" / "test_data_with_predictions.csv"
-ZCTA_PARQUET_IN = BASE / "data" / "processed_data" / "tx_zcta.parquet"
+
+ZCTA_PARQUET_IN = BASE / "data" / "processed_data" / "states_zcta.parquet"
 ZCTA_PARQUET_OUT = BASE / "data" / "processed_data" / "tx_zcta_with_prices.parquet"
 ZCTA_CSV_OUT = BASE / "data" / "processed_data" / "tx_zcta_with_prices.csv"
 OUT_DIR = BASE / "data" / "processed_data"
 
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-#load state
+# load states
 target_states = ["CA", "TX", "FL", "WA", "NY"]
-# Load attributes and keep TX only
 uszips = pd.read_csv(USZIPS, dtype={"zip": "string"}).assign(zip=lambda d: d["zip"].str.zfill(5))
 uszips_selected = uszips[uszips["state_id"].isin(target_states)]
 #uszips_tx = uszips[uszips["state_id"] == "TX"]
@@ -34,11 +34,11 @@ else:
 
 zcta = zcta.to_crs(epsg=4326)
 
-# Join to keep only TX ZCTAs and carry a few attributes
+# join to keep only target ZCTAs and a few attributes
 keep_cols = ["zip", "population", "density", "city", "county_name","state_id"]
 zcta_tx = zcta.merge(uszips[keep_cols], on="zip", how="inner")[["zip", "population", "density", "city", "county_name", "state_id", "geometry"]]
 
-# Save as GeoParquet (fastest to reload) and GeoJSON
+# save
 gpq_path = OUT_DIR / "states_zcta.parquet"
 geojson_path = OUT_DIR / "states_zcta.geojson"
 
@@ -51,7 +51,7 @@ print("Wrote:", geojson_path)
 # ----- ADD ZIP TO PREDICTED DATASET -----
 from sklearn.neighbors import BallTree
 
-# Find Nearest-ZIP assignment using BallTree
+# find nearest ZIP assignment using BallTree
 zips_tx = (
     pl.read_csv(USZIPS, dtypes={"zip": pl.Utf8})
      # .filter(pl.col("state_id") == "TX")
@@ -73,7 +73,7 @@ houses = houses.with_columns([
     pl.Series("zip_dist_km", (dist_rad.ravel() * 6371.0))
 ])
 
-# ZIP-level aggregates in Polars for performance
+# ZIP-level aggregates
 zip_agg = (
     houses.group_by("zip")
           .agg([
@@ -84,7 +84,7 @@ zip_agg = (
           .with_columns(pl.col("zip").cast(pl.Utf8).str.zfill(5))
 )
 
-# Load TX ZCTA polygons (GeoParquet)
+# load TX ZCTA polygons (GeoParquet)
 zcta_tx = gpd.read_parquet(ZCTA_PARQUET_IN)          # GeoDataFrame (WGS84), has 'zip' + geometry
 zcta_tx["zip"] = zcta_tx["zip"].astype(str).str.zfill(5)
 
@@ -96,7 +96,7 @@ joined_pd = joined_pl.to_pandas()
 
 plot_gdf = zcta_tx[["zip", "geometry"]].merge(joined_pd, on="zip", how="left")
 
-# Save as GeoParquet (preserves geometry + metadata)
+# save
 plot_gdf.to_parquet(ZCTA_PARQUET_OUT)
 plot_gdf.to_csv(ZCTA_CSV_OUT)
 print(f"Wrote {ZCTA_PARQUET_OUT}")
