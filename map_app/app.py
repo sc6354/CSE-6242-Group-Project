@@ -62,7 +62,6 @@ def load_tj(path: Path) -> pd.DataFrame:
     df["zip"] = df["zip"].astype(str).str.zfill(5)
     return df[df["state"] == "TX"].copy()
 
-# Choose either GeoJSON or Parquet (Parquet is faster)
 zcta_tx = load_tx_zcta_parquet()
 # zcta_tx = load_tx_zcta_geojson()
 
