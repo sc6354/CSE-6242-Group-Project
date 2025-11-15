@@ -15,6 +15,8 @@ st.markdown(
     """
     **Our project aims to predict housing prices by analyzing real estate data 
     with a focus on proximity to Trader Joe’s stores.**
+
+    
     """
 )
 
