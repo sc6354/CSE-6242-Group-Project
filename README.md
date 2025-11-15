@@ -1,7 +1,6 @@
-
+# Housing Price Prediction Project
 
 ## Table of Contents
-
 
 <br>
 
@@ -10,10 +9,17 @@ __Notice__: This README is for users running the notebook locally and makes assu
 
 <br>
 
+## 1. Background
 
-## Overview
+This project aims to predict housing prices in the United States by leveraging a combination of standard real estate features and novel location-based data. Specifically, we investigate the "Trader Joe's effect"—the hypothesis that proximity to high-end grocery stores like Trader Joe's correlates with higher property values.
 
-#### Data Description
+Our approach involves:
+* **Data Collection:** Using real estate listings, Trader Joe's store locations, and zip code demographic/density data.
+* **Feature Engineering:** Creating geospatial features such as distance to the nearest Trader Joe's, location density, and interaction terms between property characteristics.
+* **Machine Learning Modeling:** Training and tuning various regression models, from linear baselines (Ridge, Lasso) to advanced tree-based ensembles (Random Forest, HistGradientBoosting), to accurately forecast housing prices.
+
+
+## 2. Data Description
 
 The `data` folder contains all datasets used for this Trader Joe's and Housing Price project. Below is a brief description of each file:
 
@@ -22,3 +28,34 @@ The `data` folder contains all datasets used for this Trader Joe's and Housing P
 -   `data/raw/tj-locations.csv`: Provides zip codes of each [Trader Joe's location](https://www.kaggle.com/datasets/saejinmahlauheinert/trader-joes-locations?phase=FinishSSORegistration&returnUrl=%2Fdatasets%2Fsaejinmahlauheinert%2Ftrader-joes-locations%2Fversions%2F33%3Fresource%3Ddownload&SSORegistrationToken=CfDJ8IaGWDgvvrBFtGGva9hUIY67e60_nY9Mf8ml79rMJZjCOHgInCOcGVQu5L4jNAtPBeWqD5A9muD6e7-EB6UhFvCtBg52rqWLStIu1omSD7Kyq6FwFOKg86J3etQgY_lZx_qst_Kq7LM4KzXTtFWgrNikVJcGISfX1sTTMTZXCIyEbJjQferZ4ptgrJ2sDetQ3f4R3tU88NcrcMcdGwcay2PJ7f0CDrhMQSCBj-30E8If9Z_RO-P-cubuEhGl2aHjsTV9d2pdz2ta_jcNLkZe2q9lLMIiBAtGcQmQuSo8jWEhUJPbN1rrmIqFg67cQ8sdjcOIrP_rJnk7AGYONwRD06eWNw&DisplayName=Sue).
 
 -   `data/simplemaps_uszips_basicv1.911`: Provides longitude and latitude coordinates for US zip codes. Data is sourced from [SimpleMaps](https://simplemaps.com/data/us-zips).
+
+
+
+## 3. Environment Setup & Running the Notebook
+
+To reproduce the analysis and run the modeling notebook, follow these steps to set up your environment.
+
+
+### Installation Steps
+1.  **Clone or download this repository** to your local machine.
+2.  **Create the Conda environment** using the provided `notebook_env.yaml` file. open your terminal, navigate to the project root directory, and run:
+    ```bash
+    conda env create -f conda/notebook_env.yaml
+    ```
+3.  **Activate the environment**:
+    ```bash
+    conda activate notebook_env
+    ```
+
+### Running the Analysis
+1.  **Data Preprocessing:** Before running the notebook, ensure the data is preprocessed. Run the Python script from the project root:
+    ```bash
+    python src/preprocess_data.py
+    ```
+    This script will read raw data from `data/raw/`, perform cleaning and feature engineering, and save the processed training and test sets to `data/processed_data/`.
+
+2.  **Launch Jupyter Notebook:**
+    ```bash
+    jupyter notebook
+    ```
+3.  **Open and Run the Notebook:** In the Jupyter interface, navigate to the `notebooks/` directory and open `housing_price_modeling.ipynb`. Run all cells to execute the modeling pipeline, evaluate performance, and generate visualizations. Secondly, navigate to `inter_modeling.ipynb` and run all cells to execute inference modeling.
