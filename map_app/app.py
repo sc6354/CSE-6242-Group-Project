@@ -26,15 +26,14 @@ TJ_PATH = BASE / "data" / "raw" / "tj-locations.csv"
 GEOJSON_PATH = BASE / "data" / "processed_data" / "tx_zcta.geojson"
 PARQUET_PATH = BASE / "data" / "processed_data" / "tx_zcta_with_prices.parquet"
 
-# 🔴 IMPORTANT: adjust this to your uszips.csv location
 USZIPS_PATH = BASE / "data" / "simplemaps_uszips_basicv1.911" / "uszips.csv"
 
 # -----------------------------------------------------------------------------
-# KEEP THESE FUNCTIONS AS-IS (PER YOUR REQUEST)
+# 
 # -----------------------------------------------------------------------------
 @st.cache_data
 def load_tx_zcta_geojson():
-    gdf = gpd.read_file(GEOJSON_PATH)   # already WGS84, TX-only, with attrs
+    gdf = gpd.read_file(GEOJSON_PATH)   # 
     return gdf
 
 @st.cache_data
@@ -43,7 +42,7 @@ def load_tx_zcta_parquet():
 
 @st.cache_data
 def load_tj(path: Path) -> pd.DataFrame:
-    # Keep only the 5 states you care about
+    # Keep only the 5 states 
     target_states = ["CA", "TX", "FL", "WA", "NY"]
     df = pd.read_csv(path)
     df["state"] = df["state"].str.upper()
@@ -54,7 +53,7 @@ def load_tj(path: Path) -> pd.DataFrame:
 # LOAD ZCTAs + ADD STATE INFO VIA USZIPS MERGE
 # -----------------------------------------------------------------------------
 zcta_all = load_tx_zcta_parquet()   # currently has ZIPs + prices + density, etc.
-# We expect a 'zip' column here. If it's named differently, adjust.
+
 if "zip" not in zcta_all.columns:
     raise ValueError("Expected a 'zip' column in the ZCTA parquet to join on.")
 
@@ -64,7 +63,7 @@ uszips = (
       .assign(zip=lambda d: d["zip"].str.zfill(5))
 )
 
-# Merge state_id into the geodataframe if it doesn't already exist
+# 
 if "state_id" not in zcta_all.columns and "state" not in zcta_all.columns:
     zcta_all = zcta_all.merge(
         uszips[["zip", "state_id"]],
