@@ -59,3 +59,16 @@ To reproduce the analysis and run the modeling notebook, follow these steps to s
     jupyter notebook
     ```
 3.  **Open and Run the Notebook:** In the Jupyter interface, navigate to the `notebooks/` directory and open `housing_price_modeling.ipynb`. Run all cells to execute the modeling pipeline, evaluate performance, and generate visualizations. Secondly, navigate to `inter_modeling.ipynb` and run all cells to execute inference modeling.
+
+### Running the Streamlit App
+1.  **Data Preprocessing:** Before running the notebook, ensure the data is preprocessed. Run the Python script from the project root:
+    ```bash
+    python src/preprocess_data.py
+    ```
+    This script will read raw data from `data/raw/`, perform cleaning and feature engineering, and save the processed training and test sets to `data/processed_data/`.
+
+2.  **Launch Jupyter Notebook:**
+    ```bash
+    jupyter notebook
+    ```
+3.  **Open and Run the Notebook:** In the Jupyter interface, navigate to the `notebooks/` directory and open `housing_price_modeling.ipynb`. Run all cells to execute the modeling pipeline, evaluate performance, and generate visualizations. Secondly, navigate to `inter_modeling.ipynb` and run all cells to execute inference modeling.
