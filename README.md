@@ -61,14 +61,26 @@ To reproduce the analysis and run the modeling notebook, follow these steps to s
 3.  **Open and Run the Notebook:** In the Jupyter interface, navigate to the `notebooks/` directory and open `housing_price_modeling.ipynb`. Run all cells to execute the modeling pipeline, evaluate performance, and generate visualizations. Secondly, navigate to `inter_modeling.ipynb` and run all cells to execute inference modeling.
 
 ### Running the Streamlit App
-1.  **Data Preprocessing:** Before running the notebook, ensure the data is preprocessed. Run the Python script from the project root:
+1.  **Create the Conda environment** using the provided `notebook_env.yaml` file. open your terminal, navigate to the project root directory, and run:
     ```bash
-    python src/preprocess_data.py
+    conda env create -f conda/viz_env.yaml
     ```
-    This script will read raw data from `data/raw/`, perform cleaning and feature engineering, and save the processed training and test sets to `data/processed_data/`.
+2.  **Activate the environment**:
+    ```bash
+    conda activate viz_env
+    ```
+3.  **Data Preprocessing:** Before running the notebook, ensure the data used by the Streamlit app is preprocessed. Run the Python script from the project root:
+    ```bash
+    python src/process_map_data.py
+    ```
+    Note: ```process_map_data.py``` may take up to 10 minutes to run. It loads the full nationwide Census ZCTA shapefile, joins it with ZIP-code attributes, computes nearest ZIPs for every house in the prediction dataset using a BallTree nearest-neighbor search, aggregates predictions to the ZIP level, and then writes large GeoParquet/GeoJSON files for all 5 states. It will produce 4 output files:
+    1. `data/processed_data/tx_zcta_with_prices.csv`
+    2. `data/processed_data/tx_zcta_with_prices.parquet`
+    3. `data/processed_data/states_zcta.geojson`
+    4. `data/processed_data/states_zcta.parquet`
 
-2.  **Launch Jupyter Notebook:**
+5.  **Launch Jupyter Notebook:**
     ```bash
     jupyter notebook
     ```
-3.  **Open and Run the Notebook:** In the Jupyter interface, navigate to the `notebooks/` directory and open `housing_price_modeling.ipynb`. Run all cells to execute the modeling pipeline, evaluate performance, and generate visualizations. Secondly, navigate to `inter_modeling.ipynb` and run all cells to execute inference modeling.
+6.  **Open and Run the Notebook:** In the Jupyter interface, navigate to the `notebooks/` directory and open `housing_price_modeling.ipynb`. Run all cells to execute the modeling pipeline, evaluate performance, and generate visualizations. Secondly, navigate to `inter_modeling.ipynb` and run all cells to execute inference modeling.
