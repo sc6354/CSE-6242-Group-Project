@@ -47,6 +47,27 @@ To reproduce the analysis and run the modeling notebook, follow these steps to s
     conda activate notebook_env
     ```
 
+### Optional Steps to Acquire the Datasets:
+To ensure reproducebility since Kaggle datasets can be taken down by dataset authors, we included the `[raw dataset] data/raw/realtor-data.zip.csv` and preprocessed datasets under `[test_processed]data/processed_data/test_processed.csv` and `[training_processed.csv](data/processed_data/training_processed.csv)`. 
+
+However, we also provided the commands to extract all datsets below.
+
+1. Run this kaggle API Command to download the housing dataset.
+ ```
+#!/bin/bash
+kaggle datasets download ahmedshahriarsakib/usa-real-estate-dataset
+ ```
+
+2. Run this Kaggle API Command to download the Trader Joes Stores dataset. 
+ ```
+#!/bin/bash
+kaggle datasets download saejinmahlauheinert/trader-joes-locations
+ ```
+
+3. Visit [https://simplemaps.com/data/us-zips](https://simplemaps.com/data/us-zips) and click on download to save zip code dataset.
+![Click on download to save zip code dataset](data/simplemaps_uszips_basicv1.911/zipcode_dataset.png)
+
+
 ### Running the Analysis
 1.  **Data Preprocessing:** Before running the notebook, ensure the data is preprocessed. Run the Python script from the project root:
     ```bash
@@ -59,6 +80,7 @@ To reproduce the analysis and run the modeling notebook, follow these steps to s
     jupyter notebook
     ```
 3.  **Open and Run the Notebook:** In the Jupyter interface, navigate to the `notebooks/` directory and open `housing_price_modeling.ipynb`. Run all cells to execute the modeling pipeline, evaluate performance, and generate visualizations. Secondly, navigate to `inter_modeling.ipynb` and run all cells to execute inference modeling.
+
 
 ### Running the Streamlit App
 1.  **Create the Conda environment** using the provided `viz_env.yaml` file. open your terminal, navigate to the project root directory, and run:
@@ -89,3 +111,6 @@ To reproduce the analysis and run the modeling notebook, follow these steps to s
 - Red dots represent Trader Joe’s locations.
 - Our recommended approach is to hover over ZIP codes near Trader Joe’s locations and ZIP codes further from Trader Joe’s locations to see how predicted attributes change by ZIP code.
 
+bash
+conda info
+conda list -n base | grep -E "libmambapy|conda-libmamba-solver|conda"
