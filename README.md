@@ -61,7 +61,7 @@ To reproduce the analysis and run the modeling notebook, follow these steps to s
 3.  **Open and Run the Notebook:** In the Jupyter interface, navigate to the `notebooks/` directory and open `housing_price_modeling.ipynb`. Run all cells to execute the modeling pipeline, evaluate performance, and generate visualizations. Secondly, navigate to `inter_modeling.ipynb` and run all cells to execute inference modeling.
 
 ### Running the Streamlit App
-1.  **Create the Conda environment** using the provided `notebook_env.yaml` file. open your terminal, navigate to the project root directory, and run:
+1.  **Create the Conda environment** using the provided `viz_env.yaml` file. open your terminal, navigate to the project root directory, and run:
     ```bash
     conda env create -f conda/viz_env.yaml
     ```
