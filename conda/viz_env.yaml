@@ -1,0 +1,19 @@
+name: viz-env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - numpy
+  - pandas
+  - polars
+  - geopandas
+  - plotly
+  - streamlit
+  - shapely
+  - pyogrio
+  - pip
+  - scikit-learn
+  - pip:
+      - black
+      - pre-commit
