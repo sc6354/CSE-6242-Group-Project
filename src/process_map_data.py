@@ -16,8 +16,11 @@ OUT_DIR = BASE / "data" / "processed_data"
 
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
+#load state
+target_states = ["CA", "TX", "FL", "WA", "NY"]
 # Load attributes and keep TX only
 uszips = pd.read_csv(USZIPS, dtype={"zip": "string"}).assign(zip=lambda d: d["zip"].str.zfill(5))
+uszips_selected = uszips[uszips["state_id"].isin(target_states)]
 #uszips_tx = uszips[uszips["state_id"] == "TX"]
 
 # Load polygons
@@ -36,8 +39,8 @@ keep_cols = ["zip", "population", "density", "city", "county_name","state_id"]
 zcta_tx = zcta.merge(uszips[keep_cols], on="zip", how="inner")[["zip", "population", "density", "city", "county_name", "state_id", "geometry"]]
 
 # Save as GeoParquet (fastest to reload) and GeoJSON
-gpq_path = OUT_DIR / "tx_zcta.parquet"
-geojson_path = OUT_DIR / "tx_zcta.geojson"
+gpq_path = OUT_DIR / "states_zcta.parquet"
+geojson_path = OUT_DIR / "states_zcta.geojson"
 
 zcta_tx.to_parquet(gpq_path)                   # best for Streamlit loads
 zcta_tx.to_file(geojson_path, driver="GeoJSON")  # easiest for Plotly choropleth_mapbox
