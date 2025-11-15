@@ -69,7 +69,7 @@ To reproduce the analysis and run the modeling notebook, follow these steps to s
     ```bash
     conda activate viz_env
     ```
-3.  **Data Preprocessing:** Before running the notebook, ensure the data used by the Streamlit app is preprocessed. Run the Python script from the project root:
+3.  **Data Preprocessing:** Generate the required files for the app. Run the Python script from the project root:
     ```bash
     python src/process_map_data.py
     ```
@@ -79,8 +79,13 @@ To reproduce the analysis and run the modeling notebook, follow these steps to s
     3. `data/processed_data/states_zcta.geojson`
     4. `data/processed_data/states_zcta.parquet`
 
-5.  **Launch Jupyter Notebook:**
+5.  **Run Streamlit App:**
     ```bash
-    jupyter notebook
+    streamlit run map_app/app.py
     ```
-6.  **Open and Run the Notebook:** In the Jupyter interface, navigate to the `notebooks/` directory and open `housing_price_modeling.ipynb`. Run all cells to execute the modeling pipeline, evaluate performance, and generate visualizations. Secondly, navigate to `inter_modeling.ipynb` and run all cells to execute inference modeling.
+- Please wait a few minutes for the app to load.
+- To zoom in or out of a state, click the “+” or “-” icons about the color bar to the right.
+- Hover over ZIP codes to view attributes. Note: Only ZIP codes with homes used in our modeling approach will have predicted value attributes.
+- Red dots represent Trader Joe’s locations.
+- Our recommended approach is to hover over ZIP codes near Trader Joe’s locations and ZIP codes further from Trader Joe’s locations to see how predicted attributes change by ZIP code.
+
