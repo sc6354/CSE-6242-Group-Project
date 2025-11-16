@@ -34,6 +34,8 @@ The `data` folder contains all datasets used for this Trader Joe's and Housing P
 - Conda
 - Jupyter Notebook
 
+To install Jupyter Notebook, run ```pip install notebook``` after activating ```notebook_env``` in the next section.
+
 ## 4. Environment Setup & Running the Notebook
 
 To reproduce the analysis and run the modeling notebook, follow these steps to set up your environment.
