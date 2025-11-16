@@ -82,8 +82,9 @@ kaggle datasets download saejinmahlauheinert/trader-joes-locations
     ```
 3.  **Open and Run the Notebook:** In the Jupyter interface, navigate to the `notebooks/` directory and open `housing_price_modeling.ipynb`. Run all cells to execute the modeling pipeline, evaluate performance, and generate visualizations. Secondly, navigate to `inter_modeling.ipynb` and run all cells to execute inference modeling.
 
+## 4. Environment Setup & Running the Streamlit App
 
-### Running the Streamlit App
+### Environment Setup
 1.  **Create the Conda environment** using the provided `viz_env.yaml` file. open your terminal, navigate to the project root directory, and run:
     ```bash
     conda env create -f conda/viz_env.yaml
@@ -92,7 +93,8 @@ kaggle datasets download saejinmahlauheinert/trader-joes-locations
     ```bash
     conda activate viz_env
     ```
-3.  **Data Preprocessing:** Generate the required files for the app. Run the Python script from the project root:
+### Run Data Preprocessing
+1.  **Data Preprocessing:** Generate the required files for the app. Run the Python script from the project root:
     ```bash
     python src/process_map_data.py
     ```
@@ -102,7 +104,8 @@ kaggle datasets download saejinmahlauheinert/trader-joes-locations
     3. `data/processed_data/states_zcta.geojson`
     4. `data/processed_data/states_zcta.parquet`
 
-5.  **Run Streamlit App:**
+### Run Streamlit App
+1.  **Run Streamlit App:**
     ```bash
     streamlit run map_app/app.py
     ```
