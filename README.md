@@ -110,7 +110,7 @@ kaggle datasets download saejinmahlauheinert/trader-joes-locations
     streamlit run map_app/app.py
     ```
 - Please wait a few minutes for the app to load.
-- To zoom in or out of a state, click the “+” or “-” icons about the color bar to the right.
+- To zoom in or out of a state, click the “+” or “-” icons above the color bar to the right.
 - Hover over ZIP codes to view attributes. Note: Only ZIP codes with homes in our prediction dataset will have predicted value attributes.
 - Red dots represent Trader Joe’s locations.
 - Our recommended approach is to hover over ZIP codes near Trader Joe’s locations and ZIP codes further from Trader Joe’s locations to see how predicted attributes change by ZIP code.
