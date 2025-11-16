@@ -32,6 +32,7 @@ The `data` folder contains all datasets used for this Trader Joe's and Housing P
 ## 3. Software Requirements
 - Python
 - Conda
+- Jupyter Notebook
 
 ## 4. Environment Setup & Running the Notebook
 
