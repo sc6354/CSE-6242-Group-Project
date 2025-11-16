@@ -105,7 +105,7 @@ kaggle datasets download saejinmahlauheinert/trader-joes-locations
     4. `data/processed_data/states_zcta.parquet`
 
 ### Run Streamlit App
-1.  **Run Streamlit App:**
+1.  **Run Streamlit App from Project Root:**
     ```bash
     streamlit run map_app/app.py
     ```
