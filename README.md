@@ -37,11 +37,11 @@ To reproduce the analysis and run the modeling notebook, follow these steps to s
 
 
 ### Optional Steps to Acquire the Datasets:
-To ensure reproducebility since Kaggle datasets can be taken down by dataset authors, we included the `[raw dataset] data/raw/realtor-data.zip.csv` and preprocessed datasets under `[test_processed]data/processed_data/test_processed.csv` and `[training_processed.csv](data/processed_data/training_processed.csv)`. 
+To ensure reproducebility since Kaggle datasets can be taken down by dataset authors, we included the [raw dataset](https://github.com/sc6354/CSE-6242-Group-Project/raw/main/data/raw/realtor-data.zip.csv). From this raw dataset, 2 preprocessed datasets are created for modeling; one for [training](https://github.com/sc6354/CSE-6242-Group-Project/raw/main/data/processed_data/training_processed.csv) and another for [testing](https://github.com/sc6354/CSE-6242-Group-Project/raw/main/data/processed_data/test_processed.csv).
 
 However, we also provided the commands to extract all datsets below.
 
-1. Run this kaggle API Command to download the housing dataset.
+1. Run this Kaggle API Command to download the housing dataset.
  ```
 #!/bin/bash
 kaggle datasets download ahmedshahriarsakib/usa-real-estate-dataset
