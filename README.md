@@ -114,7 +114,3 @@ kaggle datasets download saejinmahlauheinert/trader-joes-locations
 - Hover over ZIP codes to view attributes. Note: Only ZIP codes with homes in our prediction dataset will have predicted value attributes.
 - Red dots represent Trader Joe’s locations.
 - Our recommended approach is to hover over ZIP codes near Trader Joe’s locations and ZIP codes further from Trader Joe’s locations to see how predicted attributes change by ZIP code.
-
-bash
-conda info
-conda list -n base | grep -E "libmambapy|conda-libmamba-solver|conda"
