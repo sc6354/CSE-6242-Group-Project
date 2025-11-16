@@ -36,17 +36,6 @@ The `data` folder contains all datasets used for this Trader Joe's and Housing P
 To reproduce the analysis and run the modeling notebook, follow these steps to set up your environment.
 
 
-### Installation Steps
-1.  **Clone or download this repository** to your local machine.
-2.  **Create the Conda environment** using the provided `notebook_env.yaml` file. open your terminal, navigate to the project root directory, and run:
-    ```bash
-    conda env create -f conda/notebook_env.yaml
-    ```
-3.  **Activate the environment**:
-    ```bash
-    conda activate notebook_env
-    ```
-
 ### Optional Steps to Acquire the Datasets:
 To ensure reproducebility since Kaggle datasets can be taken down by dataset authors, we included the `[raw dataset] data/raw/realtor-data.zip.csv` and preprocessed datasets under `[test_processed]data/processed_data/test_processed.csv` and `[training_processed.csv](data/processed_data/training_processed.csv)`. 
 
@@ -65,8 +54,20 @@ kaggle datasets download saejinmahlauheinert/trader-joes-locations
  ```
 
 3. Visit [https://simplemaps.com/data/us-zips](https://simplemaps.com/data/us-zips) and click on download to save zip code dataset.
-![Click on download to save zip code dataset](data/simplemaps_uszips_basicv1.911/zipcode_dataset.png)
 
+<img src="data/simplemaps_uszips_basicv1.911/zipcode_dataset.png" alt="Click on download to save zip code dataset" width="500">
+
+
+### Installation Steps
+1.  **Clone or download this repository** to your local machine.
+2.  **Create the Conda environment** using the provided `notebook_env.yaml` file. open your terminal, navigate to the project root directory, and run:
+    ```bash
+    conda env create -f conda/notebook_env.yaml
+    ```
+3.  **Activate the environment**:
+    ```bash
+    conda activate notebook_env
+    ```
 
 ### Running the Analysis
 1.  **Data Preprocessing:** Before running the notebook, ensure the data is preprocessed. Run the Python script from the project root:
