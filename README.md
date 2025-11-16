@@ -98,7 +98,7 @@ kaggle datasets download saejinmahlauheinert/trader-joes-locations
     ```bash
     python src/process_map_data.py
     ```
-    Note: ```process_map_data.py``` may take up to 10 minutes to run. It loads the full nationwide Census ZCTA shapefile, joins it with ZIP-code attributes, computes nearest ZIPs for every house in the prediction dataset using a BallTree nearest-neighbor search, aggregates predictions to the ZIP level, and then writes large GeoParquet/GeoJSON files for all 5 states. It will produce 4 output files:
+    Note: ```process_map_data.py``` may take up to 10 minutes to run. It loads the full nationwide Census ZCTA shapefile, joins it with ZIP-code attributes, computes nearest ZIPs for every house in the prediction dataset using a BallTree nearest-neighbor search, aggregates predictions to the ZIP level, and then writes large GeoParquet/GeoJSON files for all 5 target states (CA, TX, FL, WA, NY) used in our analysis. It will produce 4 output files:
     1. `data/processed_data/tx_zcta_with_prices.csv`
     2. `data/processed_data/tx_zcta_with_prices.parquet`
     3. `data/processed_data/states_zcta.geojson`
