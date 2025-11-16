@@ -29,9 +29,11 @@ The `data` folder contains all datasets used for this Trader Joe's and Housing P
 
 -   `data/simplemaps_uszips_basicv1.911`: Provides longitude and latitude coordinates for US zip codes. Data is sourced from [SimpleMaps](https://simplemaps.com/data/us-zips).
 
+## 3. Software Requirements
+- Python
+- Conda
 
-
-## 3. Environment Setup & Running the Notebook
+## 4. Environment Setup & Running the Notebook
 
 To reproduce the analysis and run the modeling notebook, follow these steps to set up your environment.
 
@@ -82,7 +84,7 @@ kaggle datasets download saejinmahlauheinert/trader-joes-locations
     ```
 3.  **Open and Run the Notebook:** In the Jupyter interface, navigate to the `notebooks/` directory and open `housing_price_modeling.ipynb`. Run all cells to execute the modeling pipeline, evaluate performance, and generate visualizations. Secondly, navigate to `inter_modeling.ipynb` and run all cells to execute inference modeling.
 
-## 4. Environment Setup & Running the Streamlit App
+## 5. Environment Setup & Running the Streamlit App
 
 ### Environment Setup
 1.  **Create the Conda environment** using the provided `viz_env.yaml` file. open your terminal, navigate to the project root directory, and run:
